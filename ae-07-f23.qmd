@@ -1,0 +1,268 @@
+---
+title: "AE 07: Pivoting + R Practice"
+categories: 
+  - Application exercise
+editor: visual
+---
+
+::: callout-important
+Go to the [course GitHub organization](https://github.com/sta199-f23-1) and locate the repo titled `ae-07-f23-YOUR_GITHUB_USERNAME` to get started.
+
+This AE is due Friday, September 22nd at 11:59pm.
+:::
+
+## Packages
+
+```{r}
+#| label: packages
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(scales)
+```
+
+## Pivot Practice
+
+Run the following code below. Are these data in long or wide format? Why?
+
+```{r}
+#| label: pivot-prac
+
+
+x <- tibble(
+  state = rep(c("MT", "NC" , "SC"),2),
+  group = c(rep("C", 3), rep("D", 3)),
+  obs = c(1:6)
+  )
+
+x
+
+```
+
+
+**Add Response**
+
+
+Pivot these data so that the data are wide. i.e. Each state should be it's own unique observation (row). Save this new data set as `y`.
+
+```{r}
+#| label: pivot
+
+y <- x |>
+  pivot_wider(
+    names_from = group,
+    values_from = obs
+  )
+
+```
+
+Now, let's change it back. Introducing `pivot_longer`. There are three things we need to consider with `pivot_longer`:
+
+-   What the columns will be
+-   `names_to`
+-   `values_to`
+
+```{r}
+#| label: pivot-2
+
+y |>
+  pivot_longer(cols = !state, names_to = "group", values_to = "obs")
+
+```
+
+## Pivot Practice 2
+
+Let's try this on a real data set.
+
+The Portland Trailblazers are a National Basketball Association (NBA) sports team. These data reflect the points scored by 9 Portland Trailblazers players across the first 10 games of the 2021-2022 NBA season.
+
+```{r}
+#| label: data-2
+trailblazer <- read_csv("data/trailblazer21.csv")
+```
+
+-- Take a slice at the data. Are these data in wide or long format?
+
+```{r}
+#| label: slice-blazer
+
+trailblazer |>
+  slice(1:5)
+```
+
+-- Pivot the data so that you have columns for `Player`, `Game`, `Points`. Save this as a new data set called `new.blazer`.
+
+```{r}
+#| label: pivot-3
+
+new.blazer <- trailblazer |>
+  pivot_longer(
+    cols = !Player,
+    names_to = "Game", 
+    values_to = "Points"
+  )
+
+```
+
+
+----------------------------- Answer Below -------------------------------------
+
+
+-- Suppose now that you are asked to have two separate columns within these data. One column to represent `Game`, and one to represent `Location`. Make this happen below. Save your new data set as `new.blazer`
+
+```{r}
+#| label: separate
+
+
+trailblazer |>  
+  pivot_longer(
+    cols = -Player,
+    names_to = "Game",
+    values_to = "Points",
+  ) |> 
+  separate(Game , sep = "(?=_)", into = c("Game" , "Location"))
+
+```
+
+
+-- Now, use `pivot_wider` to reshape the `new.blazer` data frame such that you have a 90 x 4 tibble with columns `Player`, `Game`, `Home`, `Away`.
+
+```{r}
+#| label: pivot-4
+
+
+new.blazer |>
+  pivot_wider(names_from = Location, 
+              values_from = Points)
+
+```
+
+
+## R Practice 
+
+
+```{r}
+#| label: load-packages-data
+
+fisheries <- read_csv("data/fisheries.csv")
+continents <- read_csv("data/continents.csv")
+```
+
+
+## Global aquaculture production
+
+The Fisheries and Aquaculture Department of the Food and Agriculture Organization of the United Nations collects data on fisheries production of countries.
+
+Our goal is to create a visualization of the mean share of aquaculture by continent.
+
+![](images/aquaculture-production-by-continent.png){fig-align="center"}
+
+
+Let's start by looking at the `fisheries` data frame.
+
+```{r}
+#| label: glimpse-fisheries
+
+## insert code here
+```
+
+We have the countries, but our goal is to make a visualization by continent. Let's take a look at the continents data frame.
+
+```{r}
+#| label: glimpse-continents
+
+glimpse(continents)
+```
+
+-   **Your turn (2 minutes):**
+    -   Which variable(s) will we use to join the `fisheries` and `continents` data frames?
+    -   We want to keep all rows and columns from `fisheries` and add a column for corresponding continents. Which join function should we use?
+-   **Demo:** Join the two data frames and name assign the joined data frame back to `fisheries`.
+
+```{r}
+#| label: join-fisheries-continents
+#| eval: false
+
+fisheries <- ..._join(..., ...)
+```
+
+-   **Demo:** Take a look at the updated `fisheries` data frame. There are some countries that were not in `continents`. First, identify which countries these are (they will have `NA` values for `continent`). Then, manually update the `continent` information for these countries using the `case_when` function. Finally, check that these updates have been made as intended and no countries are left without continent information.
+
+```{r}
+#| label: data-clean
+
+# insert code here
+```
+
+
+Comment through the following code below:
+
+```{r}
+fisheries <- fisheries |> 
+  mutate(
+    continent = case_when(
+    country == "Democratic Republic of the Congo" ~ "Africa",
+    country == "Hong Kong" ~ "Asia",
+    country == "Myanmar" ~ "Asia", 
+    TRUE ~ continent
+    )
+  )
+
+```
+
+When should we use `if_else` vs `case_when`? 
+
+**Add Response Here**
+
+-   **Demo:** Add a new column to the `fisheries` data frame called `aq_prop`. We will calculate it as `aquaculture / total`. Save the resulting frame as `fisheries`.
+
+```{r add-aq-prop}
+#| label: add-aq-prop
+
+
+  
+```
+
+-   **Your turn (5 minutes):** Now expand your calculations to also calculate the mean, minimum and maximum aquaculture proportion for continents in the fisheries data. Note that the functions for calculating minimum and maximum in R are `min()` and `max()` respectively.
+
+```{r}
+#| label: fisheries-summary-display
+
+# insert code here
+
+
+```
+
+
+
+-   **Demo:** Using your code above, create a new data frame called `fisheries_summary` that calculates minimum, mean, and maximum aquaculture proportion for each continent in the fisheries data.
+
+```{r}
+#| label: fisheries-summary-save
+
+fisheries_summary <- fisheries |>
+  group_by(continent) |>
+  summarize(
+    min_aq_prop = min(aq_prop),
+    max_aq_prop = max(aq_prop),
+    mean_aq_prop = mean(aq_prop)
+  )
+```
+
+-   **Demo:** Then, determine which continent has the largest value of `max_ap`. Take the `fisheries_summary` data frame and order the results in descending order of mean aquaculture proportion.
+
+```{r}
+#| label: fisheries-summary-sorted
+
+
+
+```
+
+-   **Demo:** Recreate the following plot using the data frame you have developed so far.
+
+```{r}
+#| label: fisheries-summary-plot
+
+
+```
